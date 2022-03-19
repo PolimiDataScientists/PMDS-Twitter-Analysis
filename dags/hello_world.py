@@ -1,3 +1,4 @@
+import airflow
 from airflow import DAG
 from airflow.operators import BashOperator
 from datetime import datetime, timedelta
@@ -11,8 +12,8 @@ sys.path.append('/usr/local/airflow/dags/daglibs')
 default_args = {
     'owner': 'PMDS',
     'depends_on_past': False,
-    'start_date': datetime.now(),
-    'email': ['alessandro1.messori@mail.polimmi.it'],
+    'start_date': airflow.utils.dates.days_ago(1),
+    'email': ['alessandro1.messori@mail.polimi.it'],
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
