@@ -20,11 +20,9 @@ default_args = {
     'retry_delay': timedelta(minutes=1),
 }
 
-# DAG is scheduled to run every minute  
-dag = DAG('PrintDate',schedule_interval=timedelta(minutes=1), default_args=default_args)
 
 
-dag = DAG('Helloworld', default_args=default_args)
+dag = DAG('Helloworld',schedule_interval=timedelta(days=1), default_args=default_args)
 
 # t1, t2, t3 and t4 are examples of tasks created using operators
 
