@@ -1,33 +1,53 @@
+import sys
 import tweepy
 import csv
-import pandas as pd
 import json
 
 f = open('./dags/credentials.json')
- 
+
 # returns JSON object as
 # a dictionary
 cred = json.load(f)
 
-####input your credentials here
-consumer_key = cred["API_key"]
-consumer_secret = cred["API_key_secret"]
-access_token = cred["access_token"]
-access_token_secret = cred["access_token_secret"]
-bearer_token = cred["bearer_token"]
-
-client = tweepy.Client(bearer_token=bearer_token)
-
-csvFile = open('./data/tweets.csv', 'a')
-#Use csv Writer
+# Open/Create a file to append data
+csvFile = open('./data/tweets.csv', 'w')
+# Use csv Writer
 csvWriter = csv.writer(csvFile)
 
-# Replace with your own search query
-query = '#covid -is:retweet lang:en'
+client = tweepy.Client(bearer_token=cred['bearer_token'],
+                       # Not needed
+                       consumer_key=cred['API_key'],
+                       consumer_secret=cred['API_key_secret'],
+                       access_token=cred['access_token'],
+                       access_token_secret=cred['access_token_secret'])
 
-tweets = client.search_recent_tweets(query=query, tweet_fields=['context_annotations', 'created_at'],  \
-     start_time="2022-03-21T09:07:21-07:00", end_time="2022-03-22T09:07:21-07:00", \
-     max_results=100,)
+query = '#covid -is:retweet place_country:It lang:en'
+
+start_time = '2019-12-01T00:00:00Z'
+end_time = '2020-05-01T00:00:00Z'
+
+tweets = client.search_all_tweets(query=query,
+                                     tweet_fields=['id','text', 'created_at', 'geo', 'lang'],
+                                     start_time=start_time,
+                                     end_time=end_time,
+                                     place_fields=['place_type', 'geo'],
+                                     expansions='geo.place_id',
+                                     max_results=500)
+
+if tweets.data is None:
+    print("No results found")
+    sys.exit()
+
+# Get list of places from includes object
+places = {p["id"]: p for p in tweets.includes['places']}
 
 for tweet in tweets.data:
-    csvWriter.writerow([tweet.created_at, tweet.text.encode('utf-8')])
+    place = None
+    if tweet.geo is not None:
+        if places[tweet.geo['place_id']]:
+            place = places[tweet.geo['place_id']]
+    csvWriter.writerow([tweet.id,
+                        tweet.created_at,
+                        tweet.lang,
+                        place.full_name if place is not None else "",
+                        tweet.text.encode('utf-8')])

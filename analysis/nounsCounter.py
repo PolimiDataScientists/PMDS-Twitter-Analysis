@@ -3,7 +3,7 @@ import spacy
 
 nlp = spacy.load('en_core_web_sm')
   
-df = pd.read_csv("./data/tweets.csv", names=["timestamp", "text"])
+df = pd.read_csv("./data/tweets.csv", names=["timestamp", "date", "lang", "region", "text"])
 
 
 df['text_modified'] = df['text'].map(lambda sentence: ' '.join([chunk.text for chunk in nlp(sentence).noun_chunks]))
@@ -24,4 +24,3 @@ words =  df.groupby("text_modified") \
 
 
 words.to_csv("./data/words.csv")
-
