@@ -21,10 +21,10 @@ client = tweepy.Client(bearer_token=cred['bearer_token'],
                        access_token=cred['access_token'],
                        access_token_secret=cred['access_token_secret'])
 
-query = '#covid -is:retweet place_country:It lang:en'
+query = '#covid -is:retweet place_country:us lang:en'
 
-start_time = '2019-12-01T00:00:00Z'
-end_time = '2020-05-01T00:00:00Z'
+start_time = '2020-04-15T00:00:00Z'
+end_time = '2020-04-30T00:00:00Z'
 
 tweets = client.search_all_tweets(query=query,
                                      tweet_fields=['id','text', 'created_at', 'geo', 'lang'],
@@ -42,12 +42,12 @@ if tweets.data is None:
 places = {p["id"]: p for p in tweets.includes['places']}
 
 for tweet in tweets.data:
-    place = None
+    '''place = None
     if tweet.geo is not None:
         if places[tweet.geo['place_id']]:
-            place = places[tweet.geo['place_id']]
+            place = places[tweet.geo['place_id']]'''
     csvWriter.writerow([tweet.id,
                         tweet.created_at,
                         tweet.lang,
-                        place.full_name if place is not None else "",
+                        #place.full_name if place is not None else "",
                         tweet.text.encode('utf-8')])
