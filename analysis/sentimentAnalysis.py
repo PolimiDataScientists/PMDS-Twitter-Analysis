@@ -58,4 +58,6 @@ def compute_sentiment_per_day(data_path):
 
 sentimentDF = compute_sentiment_per_day("./data/tweets.csv")
 
-print(sentimentDF[["day", "negPercentage", "netPercentage", "posPercentage"]].head())
+#print(sentimentDF[["day", "negPercentage", "netPercentage", "posPercentage"]].head())
+
+sentimentDF.to_csv("./data/sentiments.csv")
