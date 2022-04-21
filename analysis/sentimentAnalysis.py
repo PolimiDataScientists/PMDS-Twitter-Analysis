@@ -1,5 +1,6 @@
 import pandas as pd
 import spacy
+from datetime import datetime
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 # function that computes distributions of sentiment (positive, negative, neutral) in sentence 
@@ -25,18 +26,38 @@ def sentiment_vader(sentence):
   
     return negative, neutral, positive, compound, overall_sentiment
 
-nlp = spacy.load('en_core_web_sm')
+def compute_sentiment_per_day(data_path):
 
-df = pd.read_csv("./data/tweets.csv", names=["timestamp", "date", "lang", "region", "text"])
+    nlp = spacy.load('en_core_web_sm')
 
-# cleans input text
-df['text_modified'] = df['text'].map(lambda sentence:' '.join(([chunk.text for chunk in nlp(sentence).noun_chunks])))
+    df = pd.read_csv(data_path, names=["timestamp", "date", "lang", "text"])
+
+    # computes the day column from the string data data from the tweets
+    df['day'] = df['date'].map(lambda date: datetime.strptime(date.split(" ")[0], '%Y-%m-%d'))
+    df['day'] = pd.to_datetime(df['day'])
+
+    df['text_modified'] = df['text'].map(lambda sentence:' '.join(([chunk.text for chunk in nlp(sentence).noun_chunks])))
+
+    # creates column with overall_sentiment for each sentence
+    df["sentiment"] = df['text_modified'].map(lambda sentence: sentiment_vader(sentence)[4])
+
+    # computes sentiment counts 
+    negDFs = df[df["sentiment"] == 'Negative'].groupby(by=df['day'].dt.date).count()
+    netDFs = df[df["sentiment"] == 'Neutral'].groupby(by=df['day'].dt.date).count()
+    posDFs = df[df["sentiment"] == 'Positive'].groupby(by=df['day'].dt.date).count()
+
+    allDFs = df.groupby(by=df['day'].dt.date).count()
+
+    # computes sentiment percentages 
+    allDFs["negPercentage"] = negDFs["sentiment"] / allDFs["sentiment"]
+    allDFs["netPercentage"] = netDFs["sentiment"] / allDFs["sentiment"]
+    allDFs["posPercentage"] = posDFs["sentiment"] / allDFs["sentiment"]
+
+    return allDFs
 
 
-# creates column with overall_sentiment for each sentence
-df["sentiments"] = df['text_modified'].map(lambda sentence: sentiment_vader(sentence)[4])
+sentimentDF = compute_sentiment_per_day("./data/tweets.csv")
 
-print(df["sentiments"].head(20))
+#print(sentimentDF[["day", "negPercentage", "netPercentage", "posPercentage"]].head())
 
-# counts the number of sentences for each type of sentiment
-print(df["sentiments"].value_counts())
+sentimentDF.to_csv("./data/sentiments.csv")
