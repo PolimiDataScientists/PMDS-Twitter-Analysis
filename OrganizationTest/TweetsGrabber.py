@@ -1,5 +1,4 @@
 # This module handles the grabbing of tweets in order to produce some csv Files
-from colorama import Cursor
 from ErrorMod import Error
 import tweepy
 import json
