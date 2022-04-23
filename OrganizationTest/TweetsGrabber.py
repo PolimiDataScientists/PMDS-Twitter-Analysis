@@ -1,5 +1,9 @@
 # This module handles the grabbing of tweets in order to produce some csv Files
+
+# Custom module for error handling
 from ErrorMod import Error
+
+# A bunch of useful libraries
 import tweepy
 import json
 import csv
@@ -8,8 +12,14 @@ import time
 
 
 class Grabber():
+    # The Path where the credentials are stored
     credPath = './credentials.json'
+
+    # The Path where the csv file will be saved
     savingPath = './TweetsCSV/'
+
+    # The Path of the last saved csv
+    lastSaved = ''
 
     def __init__(self):
         self.loadCredentials()
@@ -26,22 +36,39 @@ class Grabber():
     def connect(self):
         self.client = tweepy.Client(bearer_token=self.cred['bearer_token'])
 
-    def SetupWriter(self, date, nDays, max):
+    # Insgtantiating the CSV writer later used to save the tweets
+    def SetupWriter(self, date: datetime.date, nDays: int, max: int):
         start = date.strftime('%d-%m-%Y')
         end = (date + datetime.timedelta(nDays)).strftime('%d-%m-%Y')
 
         try:
-            self.csvFile = open(Grabber.savingPath + 'Tweets_' +
-                                start + '__' + end + f'[{max}].csv', 'a')
+            self.lastSaved = Grabber.savingPath + 'Tweets_' + \
+                start + '__' + end + f'[{max}].csv'
+
+            self.csvFile = open(self.lastSaved, 'a')
             self.csvWriter = csv.writer(self.csvFile)
         except FileNotFoundError:
             Error.print('No such directory as ' + Grabber.savingPath[:-1] +
                         ' you may have to change Grabber.savingPath')
 
+    # Convert a date object to a suitable string for the Twitter API
     def ConvertDate(date):
         return date.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    def QueryRequest(self, QueryHeader, startDate, nDays, place_country='us', lang='en', sleepingTime=2, maxResults=500, tweet_fields=['id', 'text', 'created_at', 'geo', 'lang'], place_fields=['place_type', 'geo']):
+    def QueryRequest(self, QueryHeader: str, startDate: datetime.date, nDays: int, place_country='us', lang='en', sleepingTime=2.0, maxResults=500, tweet_fields=['id', 'text', 'created_at', 'geo', 'lang'], place_fields=['place_type', 'geo']):
+        '''Main function for Query requests, the result will be saved in a csv file\n
+        Args:
+            startDate (date): The starting point of the period of interest
+            QueryHeader (str): The first part of the query regarding the hashtags and the retweeting
+            nDays (int): the number of consecutive days of interest
+            place_country (str): where should the tweets come from?
+            lang (str): the language of the tweets
+            sleepingTime (float): the number of seconds the program should wait before sending another request
+            maxResults (int): The maximum number of Tweets recieved [min: 10]
+            tweet_fields ([str]): What fields of the tweets are you interested in recieving?
+            place_fields ([str]): What fields of the place are you interested in recieving?
+        '''
+
         self.connect()
         self.SetupWriter(startDate, nDays, maxResults)
 
