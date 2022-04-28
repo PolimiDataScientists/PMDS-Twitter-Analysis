@@ -1,7 +1,8 @@
 # This module handles the grabbing of tweets in order to produce some csv Files
 
 # Custom module for error handling
-from ErrorMod import Error
+# Dot added for using this class from other directories
+from ErrorMod import Error 
 
 # A bunch of useful libraries
 import tweepy
@@ -9,14 +10,16 @@ import json
 import csv
 import datetime
 import time
-
+import string
+import re
 
 class Grabber():
     # The Path where the credentials are stored
     credPath = './credentials.json'
 
     # The Path where the csv file will be saved
-    savingPath = './TweetsCSV/'
+    #savingPath = './TweetsCSV/'
+    savingPath = './data/'
 
     # The Path of the last saved csv
     lastSaved = ''
@@ -45,7 +48,7 @@ class Grabber():
             self.lastSaved = Grabber.savingPath + 'Tweets_' + \
                 start + '__' + end + f'[{max}].csv'
 
-            self.csvFile = open(self.lastSaved, 'a')
+            self.csvFile = open(self.lastSaved, 'a', newline='')
             self.csvWriter = csv.writer(self.csvFile)
         except FileNotFoundError:
             Error.print('No such directory as ' + Grabber.savingPath[:-1] +
@@ -95,9 +98,15 @@ class Grabber():
 
             for tweet in tweets.data:
                 self.csvWriter.writerow([tweet.id,
-                                         tweet.created_at,
+                                         #tweet.created_at,
+                                         tweet.created_at.strftime('%Y-%m-%d'),
                                          tweet.lang,
-                                         tweet.text.encode('utf-8')])
+                                         tweet.geo, #we can use it later
+                                         #tweet.text.encode('utf-8')]
+                                         #[i.strip(string.punctuation) for i in tweet.text.split() if not any ([i in string.punctuation, i.isdigit()])]
+                                         #''.join(ch for ch in tweet.text if ch.isspace() or ch.isalnum() or ch.isdigit()) #removed special characters as they were processed with errors
+                                         re.sub("^\s+|\n|\r|\s+$", ' ', ''.join(ch for ch in tweet.text if ch.isspace() or ch.isalnum() or ch.isdigit()))
+                ])
 
             date = endDate
             time.sleep(sleepingTime)
