@@ -35,8 +35,7 @@ class SentimentAnalysis:
 
         nlp = spacy.load('en_core_web_sm')
 
-        df = pd.read_csv(self.data_path, names=[
-                         "timestamp", "date", "lang", "text"])
+        df = pd.read_csv(self.data_path, names=["timestamp", "date", "lang", "text"])
 
         # computes the day column from the string data data from the tweets
         df['day'] = df['date'].map(
@@ -73,3 +72,6 @@ class SentimentAnalysis:
             self.sentiment_df.to_csv(out_path)
         except:
             print("Sentiments need to be computed before being exported")
+
+    def getSentimentStatistics(self):
+        return self.sentiment_df[["day","negPercentage","netPercentage","posPercentage"]].idxmax()
