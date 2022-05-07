@@ -145,3 +145,4 @@ dags/credentials.json
 data/
 .vscode/
 .idea/
+.DS_Store
