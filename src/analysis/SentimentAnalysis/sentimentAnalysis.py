@@ -2,7 +2,7 @@ import pandas as pd
 import spacy
 from datetime import datetime
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-
+import glob
 
 class SentimentAnalysis:
     def __init__(self, data_path):
@@ -35,13 +35,20 @@ class SentimentAnalysis:
 
         nlp = spacy.load('en_core_web_sm')
 
-        df = pd.read_csv(self.data_path, names=[
-                         "timestamp", "date", "lang", "text"])
+        #df = pd.read_csv(self.data_path, names=[
+        #                 "timestamp", "date", "lang", "text"])
+
+        csv_files = glob.glob(self.data_path)
+        df = []
+        for file in csv_files:
+            df_one = pd.read_csv(file, names=[
+                        "id", "day", "lang", "geo", "text"])
+            df.append(df_one)
 
         # computes the day column from the string data data from the tweets
-        df['day'] = df['date'].map(
-            lambda date: datetime.strptime(date.split(" ")[0], '%Y-%m-%d'))
-        df['day'] = pd.to_datetime(df['day'])
+        #df['day'] = df['date'].map(
+        #    lambda date: datetime.strptime(date.split(" ")[0], '%Y-%m-%d'))
+        #df['day'] = pd.to_datetime(df['day'])
 
         df['text_modified'] = df['text'].map(lambda sentence: ' '.join(
             ([chunk.text for chunk in nlp(sentence).noun_chunks])))
@@ -58,7 +65,7 @@ class SentimentAnalysis:
         posDFs = df[df["sentiment"] == 'Positive'].groupby(
             by=df['day'].dt.date).count()
 
-        allDFs = df.groupby(by=df['day'].dt.date).count()
+        allDFs = df['day','id','sentiment'].groupby(by=df['day'].dt.date).count()
 
         # computes sentiment percentages
         allDFs["negPercentage"] = negDFs["sentiment"] / allDFs["sentiment"]
