@@ -14,3 +14,5 @@ g.QueryRequest('#covid -is:retweet', datetime.date(2020, 3, 1), 60, maxResults=1
 senan = sa(inFile)
 senan.compute_sentiment_per_day()
 senan.exportSentiment(outFile)
+
+# Here should be the classes to analyze the data
