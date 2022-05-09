@@ -148,3 +148,4 @@ keys.txt
 experiments/
 .vscode/
 .idea/
+.DS_Store
