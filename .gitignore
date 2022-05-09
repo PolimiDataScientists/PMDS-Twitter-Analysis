@@ -143,6 +143,9 @@ token.pickle
 
 dags/credentials.json
 data/
+
+keys.txt
+experiments/
 .vscode/
 .idea/
 .DS_Store

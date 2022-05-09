@@ -2,7 +2,7 @@ import pandas as pd
 import spacy
 from datetime import datetime
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-
+import glob
 
 class SentimentAnalysis:
     def __init__(self, data_path):
@@ -35,19 +35,41 @@ class SentimentAnalysis:
 
         nlp = spacy.load('en_core_web_sm')
 
-        df = pd.read_csv(self.data_path, names=["timestamp", "date", "lang", "text"])
+        #df = pd.read_csv(self.data_path, names=["timestamp", "date", "lang", "text"])
+        # changed reading from one file to reading from a set of files with a mask
+        csv_files = glob.glob(self.data_path)
+        df = []
+        for file in csv_files:
+            df_one = pd.read_csv(file, names=[
+                        "id", "date", "lang", "geo", "text"])
+            df.append(df_one)
 
         # computes the day column from the string data data from the tweets
         df['day'] = df['date'].map(
             lambda date: datetime.strptime(date.split(" ")[0], '%Y-%m-%d'))
         df['day'] = pd.to_datetime(df['day'])
 
+        # noun chunks of the sentence
         df['text_modified'] = df['text'].map(lambda sentence: ' '.join(
             ([chunk.text for chunk in nlp(sentence).noun_chunks])))
+
+        # lemmatization
+        df['text_lemma'] = df['text'].map(lambda sentence: ' '.join(
+            ([word.lemma_ for word in nlp(sentence)])))
 
         # creates column with overall_sentiment for each sentence
         df["sentiment"] = df['text_modified'].map(
             lambda sentence: self.sentiment_vader(sentence)[4])
+        
+        # creates column with overall_sentiment for lemmatized
+        df["sentiment_lemma"] = df['text_lemma'].map(
+            lambda sentence: self.sentiment_vader(sentence)[4])
+        
+## DEBUGGING
+
+        df.to_csv('./data/sent_analysis_debug.csv')
+
+## END
 
         # computes sentiment counts
         negDFs = df[df["sentiment"] == 'Negative'].groupby(
@@ -57,7 +79,7 @@ class SentimentAnalysis:
         posDFs = df[df["sentiment"] == 'Positive'].groupby(
             by=df['day'].dt.date).count()
 
-        allDFs = df.groupby(by=df['day'].dt.date).count()
+        allDFs = df['day','id','sentiment'].groupby(by=df['day'].dt.date).count()
 
         # computes sentiment percentages
         allDFs["negPercentage"] = negDFs["sentiment"] / allDFs["sentiment"]

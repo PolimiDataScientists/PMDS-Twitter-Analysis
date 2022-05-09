@@ -1,7 +1,8 @@
 # This module handles the grabbing of tweets in order to produce some csv Files
 
 # Custom module for error handling
-from ErrorMod import Error
+# Dot was added for using this class from other directories / should be removed for local testing
+from .ErrorMod import Error 
 
 # A bunch of useful libraries
 import tweepy
@@ -9,14 +10,15 @@ import json
 import csv
 import datetime
 import time
-
+import re
 
 class Grabber():
     # The Path where the credentials are stored
     credPath = './credentials.json'
 
     # The Path where the csv file will be saved
-    savingPath = './TweetsCSV/'
+    #savingPath = './TweetsCSV/'
+    savingPath = './data/'
 
     # The Path of the last saved csv
     lastSaved = ''
@@ -45,7 +47,7 @@ class Grabber():
             self.lastSaved = Grabber.savingPath + 'Tweets_' + \
                 start + '__' + end + f'[{max}].csv'
 
-            self.csvFile = open(self.lastSaved, 'a')
+            self.csvFile = open(self.lastSaved, 'a', newline='') # newline parameter to escape empty rows
             self.csvWriter = csv.writer(self.csvFile)
         except FileNotFoundError:
             Error.print('No such directory as ' + Grabber.savingPath[:-1] +
@@ -54,6 +56,16 @@ class Grabber():
     # Convert a date object to a suitable string for the Twitter API
     def ConvertDate(date):
         return date.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    def CleanText(text):
+        text = re.sub(r'@[A-Za-z0-9]+', '', text) #Remove tags
+        text = re.sub(r'RT[\s]+', '', text) #remove ReTweets
+        text = re.sub(r'https?:\/\/\S+', '', text) #remove links
+        text = re.sub(r'\\\S+', '', text) #Remove emojies and sp chars
+        text = re.sub(r'#', '', text) #Remove emojies and sp chars
+        text = re.sub(r'b\'', '', text) #remove the "b'"
+        text = re.sub(r'b\'', '', text) #remove the "b'"
+        return text
 
     def QueryRequest(self, QueryHeader: str, startDate: datetime.date, nDays: int, place_country='us', lang='en', sleepingTime=2.0, maxResults=500, tweet_fields=['id', 'text', 'created_at', 'geo', 'lang'], place_fields=['place_type', 'geo']):
         '''Main function for Query requests, the result will be saved in a csv file\n
@@ -95,9 +107,12 @@ class Grabber():
 
             for tweet in tweets.data:
                 self.csvWriter.writerow([tweet.id,
-                                         tweet.created_at,
-                                         tweet.lang,
-                                         tweet.text.encode('utf-8')])
+                                        #tweet.created_at,
+                                        tweet.created_at.strftime('%Y-%m-%d'),
+                                        tweet.lang,
+                                        tweet.geo, #we can use it later
+                                        Grabber.CleanText(tweet.text).encode('utf-8')
+                ])
 
             date = endDate
             time.sleep(sleepingTime)
