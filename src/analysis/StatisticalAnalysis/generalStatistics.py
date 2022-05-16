@@ -8,4 +8,6 @@ class GeneralStatistics:
         datasetNoOutliers = self.dataset[self.dataset[col] < 1] if perc else self.dataset 
 
         return datasetNoOutliers[datasetNoOutliers[col] == datasetNoOutliers[col].max()][["day",col]]
-    
+
+
+       
