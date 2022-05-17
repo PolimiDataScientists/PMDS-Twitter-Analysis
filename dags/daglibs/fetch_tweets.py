@@ -14,7 +14,7 @@ f = open('./dags/credentials.json')
 cred = json.load(f)
 
 # Open/Create a file to append data
-csvFile = open('./data/tweets.csv', 'a')
+csvFile = open('./data/tweetsAU.csv', 'a')
 # Use csv Writer
 csvWriter = csv.writer(csvFile)
 
@@ -25,7 +25,7 @@ client = tweepy.Client(bearer_token=cred['bearer_token'],
                        access_token=cred['access_token'],
                        access_token_secret=cred['access_token_secret'])
 
-query = '#covid -is:retweet place_country:us lang:en'
+query = '#covid -is:retweet place_country:au lang:en'
 
 startPandemic = date(2020,1,1)   # start date
 endPandemic = date(2021,12,31) 
