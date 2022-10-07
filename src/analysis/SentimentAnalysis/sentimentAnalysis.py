@@ -5,12 +5,13 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
 class SentimentAnalysis:
-    def __init__(self, data_path):
+    def __init__(self, data_path, col_names=["timestamp", "date", "lang", "geo", "text"]):
         self.data_path = data_path
         self.sentiment_df = None
+        self.col_names=col_names
 
     #  function that computes distributions of sentiment (positive, negative, neutral) in sentence
-    def sentiment_vader(self, sentence):
+    def sentiment_vader(self, sentence, sent_threshold=[0.05, -0.05], sent_class=["Positive","Neutral","Negative"]):
 
         # Create a SentimentIntensityAnalyzer object.
         sid_obj = SentimentIntensityAnalyzer()
@@ -21,21 +22,22 @@ class SentimentAnalysis:
         positive = sentiment_dict['pos']
         compound = sentiment_dict['compound']
 
-        if sentiment_dict['compound'] >= 0.05:
-            overall_sentiment = "Positive"
-        elif sentiment_dict['compound'] <= - 0.05:
-            overall_sentiment = "Negative"
-        else:
-            overall_sentiment = "Neutral"
+        overall_sentiment = None
+        for thresh, sent in zip(sent_threshold, sent_class[:-1]):
+            if sentiment_dict['compound'] >= thresh:
+                overall_sentiment = sent
+                break
+        if overall_sentiment is None:
+            overall_sentiment = sent_class[-1]
 
         return negative, neutral, positive, compound, overall_sentiment
 
     # computes the sentiment distribution per day reading from the data path
-    def compute_sentiment_per_day(self):
+    def compute_sentiment_per_day(self, **kwargs):
 
         nlp = spacy.load('en_core_web_sm')
 
-        df = pd.read_csv(self.data_path, names=["timestamp", "date", "lang", "text"])
+        df = pd.read_csv(self.data_path, header=None, index_col=False, names=self.col_names)
 
         # computes the day column from the string data data from the tweets
         df['day'] = df['date'].map(
@@ -47,7 +49,7 @@ class SentimentAnalysis:
 
         # creates column with overall_sentiment for each sentence
         df["sentiment"] = df['text_modified'].map(
-            lambda sentence: self.sentiment_vader(sentence)[4])
+            lambda sentence: self.sentiment_vader(sentence, **kwargs)[4])
 
         # computes sentiment counts
         negDFs = df[df["sentiment"] == 'Negative'].groupby(
@@ -64,7 +66,7 @@ class SentimentAnalysis:
         allDFs["netPercentage"] = netDFs["sentiment"] / allDFs["sentiment"]
         allDFs["posPercentage"] = posDFs["sentiment"] / allDFs["sentiment"]
 
-        self.sentiment_df = allDFs
+        self.sentiment_df = allDFs[["negPercentage", "netPercentage", "posPercentage"]].fillna(0)
 
     # exports the sentiment data
     def exportSentiment(self, out_path):
@@ -74,4 +76,6 @@ class SentimentAnalysis:
             print("Sentiments need to be computed before being exported")
 
     def getSentimentStatistics(self):
+        if self.sentiment_df is None:
+            self.compute_sentiment_per_day()
         return self.sentiment_df[["day","negPercentage","netPercentage","posPercentage"]].idxmax()
