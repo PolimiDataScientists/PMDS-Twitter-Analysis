@@ -35,5 +35,5 @@ class TweetsStatistics:
         print("\nmean tweets count 2020: {}".format(meanTweets2020))
         print("\nmean tweets count 2021: {}".format(meanTweets2021))
 
-        print("\nmedan tweets count 2020: {}".format(medianTweets2020))
+        print("\nmedian tweets count 2020: {}".format(medianTweets2020))
         print("\nmedian tweets count 2021: {}".format(medianTweets2021))
