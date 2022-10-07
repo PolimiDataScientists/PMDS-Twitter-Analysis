@@ -67,7 +67,7 @@ class Grabber():
         text = re.sub(r'b\'', '', text) #remove the "b'"
         return text
 
-    def QueryRequest(self, QueryHeader: str, startDate: datetime.date, nDays: int, place_country='us', lang='en', sleepingTime=2.0, maxResults=500, tweet_fields=['id', 'text', 'created_at', 'geo', 'lang'], place_fields=['place_type', 'geo']):
+    def QueryRequest(self, QueryHeader: str, startDate: datetime.date, nDays: int, place_country='US', lang='en', sleepingTime=2.0, maxResults=500, tweet_fields=['id', 'text', 'created_at', 'geo', 'lang'], place_fields=['place_type', 'geo']):
         '''Main function for Query requests, the result will be saved in a csv file\n
         Args:
             startDate (date): The starting point of the period of interest
