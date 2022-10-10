@@ -65,8 +65,12 @@ class SentimentAnalysis:
         allDFs["negPercentage"] = negDFs["sentiment"] / allDFs["sentiment"]
         allDFs["netPercentage"] = netDFs["sentiment"] / allDFs["sentiment"]
         allDFs["posPercentage"] = posDFs["sentiment"] / allDFs["sentiment"]
+        
+        allDFs["negTotal"] = negDFs["sentiment"] 
+        allDFs["netTotal"] = netDFs["sentiment"] 
+        allDFs["posTotal"] = posDFs["sentiment"] 
 
-        self.sentiment_df = allDFs[["negPercentage", "netPercentage", "posPercentage"]].fillna(0)
+        self.sentiment_df = allDFs[["negPercentage", "netPercentage", "posPercentage", "negTotal", "netTotal", "posTotal"]].fillna(0)
 
     # exports the sentiment data
     def exportSentiment(self, out_path):
